@@ -1,12 +1,13 @@
 PGraphics heatmap;
 PGraphics footMask;
+PImage img;
 PVector[] sensorPositions = new PVector[4];
 color[] heatmapColors = new color[4];
 
 void setup() {
-  size(1200, 800);
+  size(1400, 750);
   colorMode(HSB, 360, 100, 100); // Using HSB for smooth color transitions
-  
+  img = loadImage("smoothfootoutline.png"); // Load the image. Ensure it's in the 'data' folder
   // Initialize sensor positions (adjust these to match your physical setup)
   sensorPositions[0] = new PVector(130, 340); // Heel
   sensorPositions[1] = new PVector(210, 280); // Midfoot lateral
@@ -19,24 +20,9 @@ void setup() {
   }
   
   heatmap = createGraphics(width, height);
-  footMask = createFootMask();
+
 }
 
-PGraphics createFootMask() {
-  PGraphics mask = createGraphics(width, height);
-  mask.beginDraw();
-  mask.background(0);
-  mask.fill(255);
-  mask.noStroke();
-  mask.beginShape();
-  mask.vertex(100, 350);
-  mask.bezierVertex(80, 320, 110, 180, 200, 150);
-  mask.bezierVertex(280, 180, 320, 300, 250, 380);
-  mask.bezierVertex(200, 400, 120, 380, 100, 350);
-  mask.endShape(CLOSE);
-  mask.endDraw();
-  return mask;
-}
 
 void drawHeatmap(float[] sensorValues) {
   heatmap.beginDraw();
@@ -60,7 +46,7 @@ void drawHeatmap(float[] sensorValues) {
 
 void draw() {
   background(255);
-  
+   image(img, 0, 0); // Display the image at the top-left corner of the canvas
   // Simulated sensor readings (replace with actual analog inputs)
   float[] fakeReadings = new float[4];
   for(int i = 0; i < 4; i++) {
@@ -68,16 +54,5 @@ void draw() {
   }
   
   drawHeatmap(fakeReadings);
-  heatmap.mask(footMask);
   image(heatmap, 0, 0);
-  
-  // Draw foot outline for reference
-  noFill();
-  stroke(0);
-  beginShape();
-  vertex(100, 350);
-  bezierVertex(80, 320, 110, 180, 200, 150);
-  bezierVertex(280, 180, 320, 300, 250, 380);
-  bezierVertex(200, 400, 120, 380, 100, 350);
-  endShape(CLOSE);
 }
