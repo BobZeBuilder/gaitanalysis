@@ -1,4 +1,4 @@
-#Smart Gait Analysis
+# Smart Gait Analysis
 
 ![image](https://github.com/user-attachments/assets/5f260fd5-5b0b-44d1-8493-bfd282944018)
 🚀 Smart Gait Analysis Interface
@@ -27,14 +27,14 @@ At a high level, the architecture adheres to a loosely-coupled design paradigm e
     Athletic Performance Elevation Framework (APEF™)
     ➤ Captures vertical movement metrics (jump height, airtime, power output) for end-to-end performance feedback loops.
 
-##🧰 Feature Stack Breakdown
+## 🧰 Feature Stack Breakdown
 Feature	Description
 Multi-Sensor Foot Mapping	Contextualizes 4 pressure sensors spatially across a normalized foot model
 Dynamic Heatmap Visualization	Gaussian-based visual feedback to surface pressure gradients
 Gait Pattern Recognition	Algorithmically extrapolates walking patterns based on real-time pressure
 Modular Section Toggles	Activate/deactivate operational panels to reduce cognitive overhead
 Jump Detection Simulator	Empowers users to test vertical analytics without vertical activity
-##📊 KPI-Driven Variables
+## 📊 KPI-Driven Variables
 
     Because metrics are meaningless unless we give them acronyms and pretend they're gospel.
 
@@ -50,7 +50,7 @@ Jump Detection Simulator	Empowers users to test vertical analytics without verti
 
     HEEL, MF, LF Metrics: Localized load zones for pressure distribution ROI
 
-##🕹️ UI/UX Optimization Layer (a.k.a. ControlP5 Setup)
+## 🕹️ UI/UX Optimization Layer (a.k.a. ControlP5 Setup)
 
 The interface, while aesthetically archaic, delivers value through togglable segmentations enabling human-centered metric consumption. Controls include:
 
@@ -62,12 +62,12 @@ The interface, while aesthetically archaic, delivers value through togglable seg
 
     Section Visibility Switches™ to declutter the dashboard on demand
 
-##💡 Innovation Delta
+## 💡 Innovation Delta
 
 This isn’t just another sensor dashboard. It’s a data empowerment suite. A cognitive feedback enhancer. A locomotion telemetry operations center.
 
 By combining tactile sensor feedback with gamified visualization strategies, we’ve created a feedback loop so tight, it’s basically Six Sigma certified. (It’s not. But it feels like it.)
-##🔧 Known “Opportunities” for Enhancement (a.k.a. Bugs We’ll Never Fix)
+## 🔧 Known “Opportunities” for Enhancement (a.k.a. Bugs We’ll Never Fix)
 
     No real sensor integration — simulated values only
 
@@ -77,7 +77,7 @@ By combining tactile sensor feedback with gamified visualization strategies, we�
 
     Code smells. A lot of them. Bring Febreze.
 
-##📌 Deployment Instructions
+## 📌 Deployment Instructions
 
     Open Processing.
 
@@ -91,6 +91,6 @@ By combining tactile sensor feedback with gamified visualization strategies, we�
 
     Enjoy the synergistic biomechanical dashboard interface you never asked for but now can’t live without.
 
-##🙄 Final Notes
+## 🙄 Final Notes
 
 This documentation was prepared in alignment with our organization’s “transparency-first” policy after a directive from the PMO (who heard about gait metrics in a TED Talk once). If you’re reading this, congratulations — you’re the new owner of this tech debt. Welcome to the legacy. You can’t escape it now.
