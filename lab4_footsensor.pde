@@ -42,10 +42,10 @@ void setup() {
   
   // Initialize sensors
   sensors = new Sensor[4];
-  sensors[0] = new Sensor(0.35, 0.25, "Medial Forefoot");
-  sensors[1] = new Sensor(0.75, 0.3, "Lateral Forefoot");
-  sensors[2] = new Sensor(0.4, 0.5, "Midfoot");
-  sensors[3] = new Sensor(0.5, 0.9, "Heel");
+  sensors[0] = new Sensor(0.35, 0.25, "Medial Forefoot"); // MF
+  sensors[1] = new Sensor(0.75, 0.3, "Lateral Forefoot"); // LF
+  sensors[2] = new Sensor(0.4, 0.5, "Midfoot");           // MM
+  sensors[3] = new Sensor(0.5, 0.9, "Heel");              // HEEL
   
   
   //draw the big ol title
@@ -158,6 +158,8 @@ void draw() {
   strokeWeight(5);
   stroke(10);
   line(350, 0, 350, 750);
+  
+  println(strideLength, strideWidth);
 }
 
 void updateCharts() {
@@ -243,6 +245,7 @@ void setupMetricsDisplay() {
     .setColorValue(color(0, 100, 200))
     .setFont(createFont("Arial Bold", 16))
     .moveTo(metricsGroup);
+    
 }
 
 String getFootingType(float footAngle) {
@@ -358,6 +361,19 @@ void drawSensorMarkers() {
     text(nf(s.pressure, 1, 2), px-15, py+25);
   }
 }
+
+
+// Calculation of the MFP
+float calculatateMFPFromSensorInputs() {
+  float MM = sensors[2].pressure;
+  float MF = sensors[0].pressure;
+  float LF = sensors[1].pressure;
+  float HEEL = sensors[3].pressure;
+  float MFP = ((MM + MF) * 100) / (MM + MF + LF + HEEL + 0.001);
+  
+  return MFP;
+}
+
 
 // Handle input field changes
 void controlEvent(ControlEvent theEvent) {
