@@ -365,5 +365,7 @@ void controlEvent(ControlEvent theEvent) {
     stepLength = float(theEvent.getStringValue());
   } else if (theEvent.isFrom(strideLengthInput)) {
     strideLength = float(theEvent.getStringValue());
+  } else if (theEvent.isFrom(strideWidthInput)) {
+    strideWidth = float(theEvent.getStringValue());
   }
 }
