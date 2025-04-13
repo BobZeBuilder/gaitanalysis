@@ -35,6 +35,15 @@ class Sensor {
 
 Sensor[] sensors;
 
+enum gait {
+  NORMAL_GAIT,
+  IN_TOEING,
+  OUT_TOEING,
+  TIPTOEING,
+  HEEL_WALKER,
+  NOT_DEFINED
+};
+
 void setup() {
   size(1200, 750);
   footImage = loadImage("smoothfootoutline.png");
@@ -372,6 +381,15 @@ float calculatateMFPFromSensorInputs() {
   float MFP = ((MM + MF) * 100) / (MM + MF + LF + HEEL + 0.001);
   
   return MFP;
+}
+
+
+// Profiling the gait
+gait porfileGait(final int MFP) {
+  // TO BE IMPLEMENTED:
+  // 'Experiment' driven estimation of the ranges for the each gait equivalent
+  
+  return gait.NOT_DEFINED; // to use further we should call on this object .ordinal()
 }
 
 
