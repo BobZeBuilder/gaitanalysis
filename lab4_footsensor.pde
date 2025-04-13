@@ -41,11 +41,22 @@ float MFP = 0;
 int time = 0;
 
 //Metrics variables SECTION 3
-boolean isActive = false;   // Control the timer
+boolean isActive = true;   // Control the timer
 int startTime = 0;          // Time when timer started or resumed
 int elapsedTime = 0;        // Accumulated time when paused
 int displayTime = 0;
 
+//
+// SECTION 4 JUMPING
+//
+Group jumpMetrics;
+boolean isJumping = false;
+int jumpCount = 0;
+float jumpHeight = 0;
+float airTime = 0;
+float peakForce = 0;
+float powerOutput = 0;
+float personalBest = 0;
 
 String[] profileNames = {"Normal Gait", "In-toeing", "Out-toeing", "Tiptoeing", "Walking on Heel"};
 
@@ -118,6 +129,15 @@ void setup() {
   //setup section 2
   setupForceMeasurementsDisplay();
   
+  //SETUP SECTION 4
+  setupJumpMetricsGroup();
+  
+  // Simulate jump detection (replace with real sensor input)
+  cp5.addButton("simulateJump")
+     .setPosition(400, 480)
+     .setSize(150, 20)
+     .setLabel("Simulate Jump");
+  
   // Create heatmap buffer
   heatmap = createGraphics(footImage.width, footImage.height);
   
@@ -157,15 +177,33 @@ void draw() {
   updateCharts();
   updateMetricsDisplay();
   updateForceDisplay();
+  if (isActive) {
+    displayTime = millis() - startTime + elapsedTime;
+  } else {
+    displayTime = elapsedTime;
+  }
+  cp5.get(Textlabel.class, "timeValue").setText(nf(displayTime / 1000, 2) + "s");
+  // SECTIONING 4 UPDATES
+  // Update display with current values
+  updateJumpMetrics();
+  
+  // Visual indicator
+  if (isJumping) {
+    fill(255, 100, 100, 150);
+    ellipse(700, 420, 100 + jumpHeight * 100, 100 + jumpHeight * 100);
+  }
+  
+  
+  
   
   if (showSection1 != prevSection1) {
     if (showSection1) {
-      metricsGroup.show();
+      //metricsGroup.show();
       stepLengthInput.show();
       strideLengthInput.show();
       strideWidthInput.show();
     } else {
-      metricsGroup.hide();
+      //metricsGroup.hide();
       stepLengthInput.hide();
       strideLengthInput.hide();
       strideWidthInput.hide();
@@ -180,9 +218,22 @@ void draw() {
     }
     prevSection2 = showSection2;
   }
-  // SECTIONING UI
-  // Draw UI components based on toggle states
-  
+  if (showSection3 != prevSection3) {
+    if (showSection3) {
+    metricsGroup.show();
+    } else {
+    metricsGroup.hide();
+    }
+    prevSection3 = showSection3;
+  }
+  if (showSection4 != prevSection4) {
+    if (showSection4) {
+    jumpMetrics.show();
+    } else {
+    jumpMetrics.hide();
+    }
+    prevSection4 = showSection4;
+  }
   
   
   // Simulate data changes
@@ -315,7 +366,7 @@ void setupSections() {
      .setSize(100, 25)
      .setFont(createFont("Arial", 14))
      .setValue(true)
-     .setCaptionLabel("Toggle Gait")
+     .setCaptionLabel("Toggle Inputs")
      .setColorCaptionLabel(0)
      .setMode(ControlP5.SWITCH);
      
@@ -333,7 +384,7 @@ void setupSections() {
      .setSize(100, 25)
      .setValue(true)
      .setFont(createFont("Arial", 14))
-     .setCaptionLabel("Toggle Activity")
+     .setCaptionLabel("Toggle Gait")
      .setColorCaptionLabel(0)
      .setMode(ControlP5.SWITCH);
      
@@ -527,7 +578,7 @@ void setupMetricsDisplay() {
     .setFont(createFont("Arial Bold", 14))
     .moveTo(metricsGroup);
   //initially hide
-  metricsGroup.hide();
+
 }
 
 void updateMetricsDisplay() {
@@ -624,14 +675,14 @@ void setupForceMeasurementsDisplay() {
   // Gait pattern detection display
   cp5.addTextlabel("patternLabel")
     .setText("DETECTED PATTERN:")
-    .setPosition(250, 150)
+    .setPosition(225, 60)
     .setColorValue(0)
     .setFont(createFont("Arial Bold", 14))
     .moveTo(forceMeasurements);
     
   cp5.addTextlabel("patternDisplay")
     .setText(currentGaitPattern)
-    .setPosition(250, 170)
+    .setPosition(225, 80)
     .setColorValue(patternColor)
     .setFont(createFont("Arial Bold", 16))
     .moveTo(forceMeasurements);
@@ -640,6 +691,137 @@ void setupForceMeasurementsDisplay() {
   
 }
 
+///
+/// SECTION 4 JUMPING ==================================================================
+///
+
+void setupJumpMetricsGroup() {
+  // Create the jump metrics group
+  jumpMetrics = cp5.addGroup("jumpMetrics")
+    .setPosition(575, 325)
+    .setWidth(585)
+    .setBackgroundColor(color(255, 180))
+    .setBackgroundHeight(180)
+    .setLabel("")
+    .moveTo("global");
+  
+  // Title
+  cp5.addTextlabel("title")
+     .setText("JUMP ANALYSIS")
+     .setPosition(10, 5)
+     .setColorValue(color(0))
+     .setFont(createFont("Arial Bold", 24))
+     .moveTo(jumpMetrics);
+  
+  // Current status
+  cp5.addTextlabel("statusLabel")
+     .setText("Status:")
+     .setPosition(10, 35)
+     .setColorValue(color(0))
+     .setFont(createFont("Arial", 16))
+     .moveTo(jumpMetrics);
+     
+  cp5.addTextlabel("statusValue")
+     .setText("GROUNDED")
+     .setPosition(100, 35)
+     .setColorValue(color(200, 0, 0))
+     .setFont(createFont("Arial Bold", 16))
+     .moveTo(jumpMetrics);
+  
+  // Metrics grid
+  String[] metrics = {"Height:", "Air Time:", "Power Output:"};
+  String[] units = {" m", " s", " N"};
+  
+  for (int i = 0; i < metrics.length; i++) {
+    // Labels
+    cp5.addTextlabel("metric"+i+"Label")
+       .setText(metrics[i])
+       .setPosition(10, 70 + i*40)
+       .setColorValue(color(0))
+       .setFont(createFont("Arial", 14))
+       .moveTo(jumpMetrics);
+    
+    // Values
+    cp5.addTextlabel("metric"+i+"Value")
+       .setText("0.00" + units[i])
+       .setPosition(150, 70 + i*40)
+       .setColorValue(color(0, 100, 200))
+       .setFont(createFont("Arial Bold", 14))
+       .moveTo(jumpMetrics);
+  }
+  
+  // Counters
+  cp5.addTextlabel("countLabel")
+     .setText("Jump Count:")
+     .setPosition(300, 70)
+     .setColorValue(color(0))
+     .setFont(createFont("Arial", 14))
+     .moveTo(jumpMetrics);
+     
+  cp5.addTextlabel("countValue")
+     .setText("0")
+     .setPosition(420, 70)
+     .setColorValue(color(200, 0, 0))
+     .setFont(createFont("Arial Bold", 14))
+     .moveTo(jumpMetrics);
+     
+  // Personal best
+  cp5.addTextlabel("bestLabel")
+     .setText("Personal Best:")
+     .setPosition(300, 110)
+     .setColorValue(color(0))
+     .setFont(createFont("Arial", 14))
+     .moveTo(jumpMetrics);
+     
+  cp5.addTextlabel("bestValue")
+     .setText("0.00 m")
+     .setPosition(420, 110)
+     .setColorValue(color(0, 150, 0))
+     .setFont(createFont("Arial Bold", 14))
+     .moveTo(jumpMetrics);
+}
+
+void updateJumpMetrics() {
+  // Update status
+  cp5.get(Textlabel.class, "statusValue")
+     .setText(isJumping ? "AIRBORNE" : "GROUNDED")
+     .setColorValue(isJumping ? color(0, 150, 0) : color(200, 0, 0));
+  
+  // Update metrics
+  cp5.get(Textlabel.class, "metric0Value").setText(nf(jumpHeight, 1, 2) + " m");
+  cp5.get(Textlabel.class, "metric1Value").setText(nf(airTime, 1, 2) + " s");
+  cp5.get(Textlabel.class, "metric2Value").setText(nf(peakForce, 1, 2) + " N");
+  
+  // Update counters
+  cp5.get(Textlabel.class, "countValue").setText(str(jumpCount));
+  cp5.get(Textlabel.class, "bestValue").setText(nf(personalBest, 1, 2) + " m");
+}
+
+void simulateJump() {
+  // Simulate a jump with random values
+  isJumping = true;
+  jumpCount++;
+  
+  // Generate random jump metrics
+  jumpHeight = random(0.2, 0.8);
+  airTime = random(0.3, 0.7);
+  peakForce = random(800, 1500);
+  
+  // Update personal best if needed
+  if (jumpHeight > personalBest) {
+    personalBest = jumpHeight;
+  }
+  
+  // Simulate landing after delay
+  new Thread(() -> {
+    try {
+      Thread.sleep(1000); // Simulate air time
+      isJumping = false;
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }).start();
+}
 
 // Handle input field changes
 void controlEvent(ControlEvent theEvent) {
