@@ -10,7 +10,7 @@ Version: TBD | Status: Perpetually Agile
 This platform represents a mission-critical, cross-functional Processing-based visualization suite, engineered to maximize biomechanical telemetry throughput and optimize user-centric interaction models for gait pattern analytics. The core functionality is underpinned by an event-driven architecture and component-based modularity designed to streamline motion capture data ingestion pipelines, facilitate real-time sensor integration, and empower decision-making stakeholders with actionable insight.
 
 In other words: it shows foot pressure in a neat way.
-##🏗️ System Architecture (A.K.A "How It Works, But in a Fancy Way")
+## 🏗️ System Architecture (A.K.A "How It Works, But in a Fancy Way")
 ![d87827fd-2ebb-4864-a4ee-81d7a10dd81b](https://github.com/user-attachments/assets/2d7fff3a-e7bc-497e-b9c3-64552582a231)
 
 At a high level, the architecture adheres to a loosely-coupled design paradigm encapsulating four primary business verticals (ahem, “Sections”):
