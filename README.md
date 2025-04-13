@@ -1,3 +1,4 @@
 # gaitanalysis
-![image](https://github.com/user-attachments/assets/fc44a3d2-b8f4-4f9e-b50a-37ba9fc84961)
+![image](https://github.com/user-attachments/assets/7279c9a5-2461-4c18-9618-8a6e7d995d32)
+
 almost release image
