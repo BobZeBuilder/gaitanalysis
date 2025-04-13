@@ -7,15 +7,18 @@ ControlP5 cp5;
 // Gait metrics
 float stepLength = 0.72;
 float strideLength = 1.44;
+float strideWidth = 0.44;
 float cadence = 110;
 float speed = 1.32;
+float footAngle = 180.2;
 int stepCount = 0;
+
 
 // Pressure history
 float[][] pressureHistory = new float[4][100];
 int historyIndex = 0;
 
-Textfield stepLengthInput, strideLengthInput;
+Textfield stepLengthInput, strideLengthInput, strideWidthInput;
 
 class Sensor {
   PVector position;
@@ -44,6 +47,7 @@ void setup() {
   sensors[2] = new Sensor(0.4, 0.5, "Midfoot");
   sensors[3] = new Sensor(0.5, 0.9, "Heel");
   
+  
   //draw the big ol title
   cp5.addTextlabel("appTitle")
     .setText("Smart Gait Analysis")
@@ -56,7 +60,8 @@ void setup() {
   
   // Set up input fields
   setupInputFields();
-  
+  // Set up the gait metrics
+  setupMetricsDisplay();
   // Create heatmap buffer
   heatmap = createGraphics(footImage.width, footImage.height);
   
@@ -91,7 +96,7 @@ void setupInputFields() {
   stepLengthInput = cp5.addTextfield("stepLengthInput")
     .setPosition(800, 500)
     .setSize(150, 30)
-    .setFont(createFont("Arial", 16))
+    .setFont(createFont("Arial", 14))
     .setAutoClear(false)
     .setCaptionLabel("Step Length (m)")
     .setColorCaptionLabel(0)
@@ -101,11 +106,21 @@ void setupInputFields() {
   strideLengthInput = cp5.addTextfield("strideLengthInput")
     .setPosition(800, 550)
     .setSize(150, 30)
-    .setFont(createFont("Arial", 16))
+    .setFont(createFont("Arial", 14))
     .setAutoClear(false)
     .setCaptionLabel("Stride Length (m)")
     .setColorCaptionLabel(0)
     .setText(str(strideLength));
+  
+  // Stride Width Input  
+  strideWidthInput = cp5.addTextfield("strideWidthInput")
+    .setPosition(800, 600)
+    .setSize(150, 30)
+    .setFont(createFont("Arial", 14))
+    .setAutoClear(false)
+    .setCaptionLabel("Stride Width (m)")
+    .setColorCaptionLabel(0)
+    .setText(str(strideWidth));
 }
 
 void initializeHistory() {
@@ -130,7 +145,8 @@ void draw() {
   updateCharts();
   
   // Display metrics
-  setupMetricsDisplay();
+  
+  updateMetricsDisplay();
   
   // Simulate data changes
   if (frameCount % 10 == 0) {
@@ -212,6 +228,31 @@ void setupMetricsDisplay() {
     .setColorValue(color(0, 100, 200))
     .setFont(createFont("Arial Bold", 16))
     .moveTo(metricsGroup);
+  
+  // foot angle display
+  cp5.addTextlabel("angleLabel")
+    .setText("Foot Angle:")
+    .setPosition(10, 170)
+    .setColorValue(color(0))
+    .setFont(createFont("Arial", 16))
+    .moveTo(metricsGroup);
+    
+  cp5.addTextlabel("angleValue")
+    .setText(str(footAngle))
+    .setPosition(120, 170)
+    .setColorValue(color(0, 100, 200))
+    .setFont(createFont("Arial Bold", 16))
+    .moveTo(metricsGroup);
+}
+
+String getFootingType(float footAngle) {
+  if (footAngle > 180) {
+    return "In-toeing";
+  } else if (footAngle < 180) {
+    return "Out-toeing";
+  } else {
+    return "Normal";
+  }
 }
 
 void updateMetricsDisplay() {
@@ -219,6 +260,8 @@ void updateMetricsDisplay() {
   cp5.get(Textlabel.class, "cadenceValue").setText(nf(cadence, 1, 0) + " steps/min");
   cp5.get(Textlabel.class, "speedValue").setText(nf(speed, 1, 2) + " m/s");
   cp5.get(Textlabel.class, "stepValue").setText(str(stepCount));
+  String footAngle = getFootingType(180.2);
+  cp5.get(Textlabel.class, "angleValue").setText(footAngle);
 }
 
 
