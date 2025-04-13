@@ -3,16 +3,44 @@ import controlP5.*;
 PImage footImage;
 PGraphics heatmap;
 ControlP5 cp5;
+Group metricsGroup; // global section1
+Group forceMeasurements; //global section2
 
-// Gait metrics
+// SECTION BUTTONS
+boolean showSection1 = true;
+boolean showSection2 = false;
+boolean showSection3 = false;
+boolean showSection4 = false;
+boolean prevSection1 = false;
+boolean prevSection2 = true;
+boolean prevSection3 = true;
+boolean prevSection4 = true;
+
+// Gait metrics SECTION 1
 float stepLength = 0.72;
 float strideLength = 1.44;
 float strideWidth = 0.44;
 float cadence = 110;
 float speed = 1.32;
-float footAngle = 180.2;
+
 int stepCount = 0;
 
+
+// Variables for data collection SECTION 2
+String currentGaitPattern = "Analyzing...";
+color patternColor = color(0);
+
+
+// Metrics variables SECTION 2
+float footAngle = 180.2;
+float cumulativeMM = 0;
+float cumulativeMF = 0;
+float cumulativeLF = 0;
+float cumulativeHEEL = 0;
+float MFP = 0;
+int time = 0;
+
+String[] profileNames = {"Normal Gait", "In-toeing", "Out-toeing", "Tiptoeing", "Walking on Heel"};
 
 // Pressure history
 float[][] pressureHistory = new float[4][100];
@@ -37,7 +65,7 @@ class Accelerometer {
   float coordinate;    // coordinate
   float acc;           // acceleration
   char dir;            // direction : x, y, or z
-  
+
   Accelerometer(float position, float acceleration, char orientation) {
     coordinate = position;
     acc = acceleration;
@@ -45,16 +73,8 @@ class Accelerometer {
   }
 }
 
-Sensor[] sensors;
 
-enum gait {
-  NORMAL_GAIT,
-  IN_TOEING,
-  OUT_TOEING,
-  TIPTOEING,
-  HEEL_WALKER,
-  NOT_DEFINED
-};
+Sensor[] sensors;
 
 void setup() {
   size(1200, 750);
@@ -63,10 +83,10 @@ void setup() {
   
   // Initialize sensors
   sensors = new Sensor[4];
-  sensors[0] = new Sensor(0.35, 0.25, "Medial Forefoot"); // MF
-  sensors[1] = new Sensor(0.75, 0.3, "Lateral Forefoot"); // LF
-  sensors[2] = new Sensor(0.4, 0.5, "Midfoot");           // MM
-  sensors[3] = new Sensor(0.5, 0.9, "Heel");              // HEEL
+  sensors[0] = new Sensor(0.35, 0.25, "Medial Forefoot");
+  sensors[1] = new Sensor(0.75, 0.3, "Lateral Forefoot");
+  sensors[2] = new Sensor(0.4, 0.5, "Midfoot");
+  sensors[3] = new Sensor(0.5, 0.9, "Heel");
   
   
   //draw the big ol title
@@ -79,10 +99,18 @@ void setup() {
   // Set up pressure charts
   setupCharts();
   
-  // Set up input fields
+  //SETUP SECTIONS BUTTONS
+  setupSections();
+  
+  // Set up input fields SECTION 1
   setupInputFields();
-  // Set up the gait metrics
+  
+  // Set up the gait metrics for SECTION 1
   setupMetricsDisplay();
+  
+  //setup section 2
+  setupForceMeasurementsDisplay();
+  
   // Create heatmap buffer
   heatmap = createGraphics(footImage.width, footImage.height);
   
@@ -90,66 +118,22 @@ void setup() {
   initializeHistory();
 }
 
-void setupCharts() {
-  int chartWidth = 150;
-  int chartHeight = 150;
-  int startX = 400;
-  
-  for (int i = 0; i < sensors.length; i++) {
-    sensors[i].chart = cp5.addChart(sensors[i].name + " Chart")
-      .setPosition(startX + i*(chartWidth + 40), 300)
-      .setSize(chartWidth, chartHeight)
-      .setRange(0, 1)
-      .setView(Chart.LINE)
-      .setStrokeWeight(1.5)
-      .setColorCaptionLabel(color(0))
-      .setColorBackground(color(255, 150));
-    
-    sensors[i].chart.addDataSet(sensors[i].name + "Pressure");
-    sensors[i].chart.setColors(sensors[i].name + "Pressure", 
-      color(255, 100, 100), color(200, 0, 0));
-    sensors[i].chart.setData(sensors[i].name + "Pressure", new float[100]);
-  }
-}
-
-void setupInputFields() {
-  // Step Length Input
-  stepLengthInput = cp5.addTextfield("stepLengthInput")
-    .setPosition(800, 500)
-    .setSize(150, 30)
-    .setFont(createFont("Arial", 14))
-    .setAutoClear(false)
-    .setCaptionLabel("Step Length (m)")
-    .setColorCaptionLabel(0)
-    .setText(str(stepLength));
-    
-  // Stride Length Input  
-  strideLengthInput = cp5.addTextfield("strideLengthInput")
-    .setPosition(800, 550)
-    .setSize(150, 30)
-    .setFont(createFont("Arial", 14))
-    .setAutoClear(false)
-    .setCaptionLabel("Stride Length (m)")
-    .setColorCaptionLabel(0)
-    .setText(str(strideLength));
-  
-  // Stride Width Input  
-  strideWidthInput = cp5.addTextfield("strideWidthInput")
-    .setPosition(800, 600)
-    .setSize(150, 30)
-    .setFont(createFont("Arial", 14))
-    .setAutoClear(false)
-    .setCaptionLabel("Stride Width (m)")
-    .setColorCaptionLabel(0)
-    .setText(str(strideWidth));
-}
-
-void initializeHistory() {
-  for (int i = 0; i < pressureHistory.length; i++) {
-    for (int j = 0; j < pressureHistory[0].length; j++) {
-      pressureHistory[i][j] = 0;
-    }
-  }
+void updateForceDisplay(){
+// Update display values
+      for (int i = 0; i < 4; i++) {
+        cp5.get(Textlabel.class, "sensor"+i+"Value").setText(nf(sensors[i].pressure, 1, 2));
+      }
+      
+      // Calculate MFP (using your formula)
+      MFP = (sensors[0].pressure + sensors[1].pressure) * 100 / 
+            (sensors[0].pressure + sensors[1].pressure + sensors[2].pressure + sensors[3].pressure + 0.001);
+      
+      cp5.get(Textlabel.class, "mfpValue").setText(nf(MFP, 1, 2) + "%");
+      
+      // Determine gait pattern automatically based on MFP
+      determineGaitPattern();
+      cp5.get(Textlabel.class, "patternDisplay").setText(currentGaitPattern)
+         .setColorValue(patternColor);
 }
 
 void draw() {
@@ -164,10 +148,35 @@ void draw() {
   
   // Update charts
   updateCharts();
-  
-  // Display metrics
-  
   updateMetricsDisplay();
+  updateForceDisplay();
+  
+  if (showSection1 != prevSection1) {
+    if (showSection1) {
+      metricsGroup.show();
+      stepLengthInput.show();
+      strideLengthInput.show();
+      strideWidthInput.show();
+    } else {
+      metricsGroup.hide();
+      stepLengthInput.hide();
+      strideLengthInput.hide();
+      strideWidthInput.hide();
+    }
+    prevSection1 = showSection1;
+  }
+  if (showSection2 != prevSection2) {
+    if (showSection2) {
+    forceMeasurements.show();
+    } else {
+    forceMeasurements.hide();
+    }
+    prevSection2 = showSection2;
+  }
+  // SECTIONING UI
+  // Draw UI components based on toggle states
+  
+  
   
   // Simulate data changes
   if (frameCount % 10 == 0) {
@@ -179,115 +188,11 @@ void draw() {
   strokeWeight(5);
   stroke(10);
   line(350, 0, 350, 750);
-  
-  println(strideLength, strideWidth);
 }
 
-void updateCharts() {
-  for (int i = 0; i < sensors.length; i++) {
-    sensors[i].chart.push(sensors[i].name + "Pressure", sensors[i].pressure);
-  }
-}
-
-void setupMetricsDisplay() {
-  // Create metrics group with semi-transparent background
-  Group metricsGroup = cp5.addGroup("metricsGroup")
-    .setPosition(400, 500)
-    .setWidth(340)
-    .setBackgroundColor(color(255, 180))
-    .setBackgroundHeight(200)
-    .setLabel("")
-    .moveTo("global");
-
-  // Big title using Textlabel
-  cp5.addTextlabel("metricsTitle")
-    .setText("GAIT METRICS")
-    .setPosition(10, 5)
-    .setColorValue(color(0))
-    .setFont(createFont("Arial Bold", 24))
-    .moveTo(metricsGroup);
-
-  // Cadence display
-  cp5.addTextlabel("cadenceLabel")
-    .setText("Cadence:")
-    .setPosition(10, 50)
-    .setColorValue(color(0))
-    .setFont(createFont("Arial", 16))
-    .moveTo(metricsGroup);
-    
-  cp5.addTextlabel("cadenceValue")
-    .setText(nf(cadence, 1, 0) + " steps/min")
-    .setPosition(120, 50)
-    .setColorValue(color(0, 100, 200))
-    .setFont(createFont("Arial Bold", 16))
-    .moveTo(metricsGroup);
-
-  // Speed display  
-  cp5.addTextlabel("speedLabel")
-    .setText("Speed:")
-    .setPosition(10, 90)
-    .setColorValue(color(0))
-    .setFont(createFont("Arial", 16))
-    .moveTo(metricsGroup);
-    
-  cp5.addTextlabel("speedValue")
-    .setText(nf(speed, 1, 2) + " m/s")
-    .setPosition(120, 90)
-    .setColorValue(color(0, 100, 200))
-    .setFont(createFont("Arial Bold", 16))
-    .moveTo(metricsGroup);
-
-  // Step count display
-  cp5.addTextlabel("stepLabel")
-    .setText("Step Count:")
-    .setPosition(10, 130)
-    .setColorValue(color(0))
-    .setFont(createFont("Arial", 16))
-    .moveTo(metricsGroup);
-    
-  cp5.addTextlabel("stepValue")
-    .setText(str(stepCount))
-    .setPosition(120, 130)
-    .setColorValue(color(0, 100, 200))
-    .setFont(createFont("Arial Bold", 16))
-    .moveTo(metricsGroup);
-  
-  // foot angle display
-  cp5.addTextlabel("angleLabel")
-    .setText("Foot Angle:")
-    .setPosition(10, 170)
-    .setColorValue(color(0))
-    .setFont(createFont("Arial", 16))
-    .moveTo(metricsGroup);
-    
-  cp5.addTextlabel("angleValue")
-    .setText(str(footAngle))
-    .setPosition(120, 170)
-    .setColorValue(color(0, 100, 200))
-    .setFont(createFont("Arial Bold", 16))
-    .moveTo(metricsGroup);
-    
-}
-
-String getFootingType(float footAngle) {
-  if (footAngle > 180) {
-    return "In-toeing";
-  } else if (footAngle < 180) {
-    return "Out-toeing";
-  } else {
-    return "Normal";
-  }
-}
-
-void updateMetricsDisplay() {
-  // Update dynamic values through ControlP5
-  cp5.get(Textlabel.class, "cadenceValue").setText(nf(cadence, 1, 0) + " steps/min");
-  cp5.get(Textlabel.class, "speedValue").setText(nf(speed, 1, 2) + " m/s");
-  cp5.get(Textlabel.class, "stepValue").setText(str(stepCount));
-  String footAngle = getFootingType(180.2);
-  cp5.get(Textlabel.class, "angleValue").setText(footAngle);
-}
-
+//
+// SETUP FOR ALL SECTIONS INCLUDING HEATMAP ================================================
+// 
 
 void updatePressureHistory() {
   for (int i = 0; i < sensors.length; i++) {
@@ -384,24 +289,309 @@ void drawSensorMarkers() {
 }
 
 
-// Calculation of the MFP
-float calculatateMFPFromSensorInputs() {
-  float MM = sensors[2].pressure;
-  float MF = sensors[0].pressure;
-  float LF = sensors[1].pressure;
-  float HEEL = sensors[3].pressure;
-  float MFP = ((MM + MF) * 100) / (MM + MF + LF + HEEL + 0.001);
-  
-  return MFP;
+
+void updateCharts() {
+  for (int i = 0; i < sensors.length; i++) {
+    sensors[i].chart.push(sensors[i].name + "Pressure", sensors[i].pressure);
+  }
+}
+
+//
+// SETUP FOR SECTION 1 ================================================================================================
+//
+//
+
+void setupSections() {
+  // Create 4 toggle buttons
+  cp5.addToggle("section1")
+     .setPosition(400, 150)
+     .setSize(100, 50)
+     .setFont(createFont("Arial", 16))
+     .setValue(true)
+     .setCaptionLabel("Section 1")
+     .setColorCaptionLabel(0)
+     .setMode(ControlP5.SWITCH);
+     
+  cp5.addToggle("section2")
+     .setPosition(600, 150)
+     .setSize(100, 50)
+     .setValue(true)
+     .setFont(createFont("Arial", 16))
+     .setCaptionLabel("Section 2")
+     .setColorCaptionLabel(0)
+     .setMode(ControlP5.SWITCH);
+     
+  cp5.addToggle("section3")
+     .setPosition(800, 150)
+     .setSize(100, 50)
+     .setValue(true)
+     .setFont(createFont("Arial", 16))
+     .setCaptionLabel("Section 3")
+     .setColorCaptionLabel(0)
+     .setMode(ControlP5.SWITCH);
+     
+  cp5.addToggle("section4")
+     .setPosition(1000, 150)
+     .setSize(100, 50)
+     .setValue(true)
+     .setFont(createFont("Arial", 16))
+     .setCaptionLabel("Section 4")
+     .setColorCaptionLabel(0)
+     .setMode(ControlP5.SWITCH);
 }
 
 
-// Profiling the gait
-gait porfileGait(final int MFP) {
-  // TO BE IMPLEMENTED:
-  // 'Experiment' driven estimation of the ranges for each gait equivalent
+// Toggle control functions
+void section1(boolean state) {
+  showSection1 = state;
+}
+
+void section2(boolean state) {
+  showSection2 = state;
+}
+
+void section3(boolean state) {
+  showSection3 = state;
+}
+
+void section4(boolean state) {
+  showSection4 = state;
+}
+
+
+void setupCharts() {
+  int chartWidth = 150;
+  int chartHeight = 150;
+  int startX = 400;
   
-  return gait.NOT_DEFINED; // to use further we should call on this object .ordinal()
+  for (int i = 0; i < sensors.length; i++) {
+    sensors[i].chart = cp5.addChart(sensors[i].name + " Chart")
+      .setPosition(startX + i*(chartWidth + 40), 300)
+      .setSize(chartWidth, chartHeight)
+      .setRange(0, 1)
+      .setView(Chart.LINE)
+      .setStrokeWeight(1.5)
+      .setColorCaptionLabel(color(0))
+      .setColorBackground(color(255, 150));
+    
+    sensors[i].chart.addDataSet(sensors[i].name + "Pressure");
+    sensors[i].chart.setColors(sensors[i].name + "Pressure", 
+      color(255, 100, 100), color(200, 0, 0));
+    sensors[i].chart.setData(sensors[i].name + "Pressure", new float[100]);
+  }
+}
+
+void setupInputFields() {
+  // Step Length Input
+  stepLengthInput = cp5.addTextfield("stepLengthInput")
+    .setPosition(800, 500)
+    .setSize(150, 30)
+    .setFont(createFont("Arial", 14))
+    .setAutoClear(false)
+    .setCaptionLabel("Step Length (m)")
+    .setColorCaptionLabel(0)
+    .setText(str(stepLength));
+    
+  // Stride Length Input  
+  strideLengthInput = cp5.addTextfield("strideLengthInput")
+    .setPosition(800, 550)
+    .setSize(150, 30)
+    .setFont(createFont("Arial", 14))
+    .setAutoClear(false)
+    .setCaptionLabel("Stride Length (m)")
+    .setColorCaptionLabel(0)
+    .setText(str(strideLength));
+  
+  // Stride Width Input  
+  strideWidthInput = cp5.addTextfield("strideWidthInput")
+    .setPosition(800, 600)
+    .setSize(150, 30)
+    .setFont(createFont("Arial", 14))
+    .setAutoClear(false)
+    .setCaptionLabel("Stride Width (m)")
+    .setColorCaptionLabel(0)
+    .setText(str(strideWidth));
+}
+
+void initializeHistory() {
+  for (int i = 0; i < pressureHistory.length; i++) {
+    for (int j = 0; j < pressureHistory[0].length; j++) {
+      pressureHistory[i][j] = 0;
+    }
+  }
+}
+
+void setupMetricsDisplay() {
+  // Create metrics group with semi-transparent background
+  metricsGroup = cp5.addGroup("metricsGroup")
+    .setPosition(400, 500)
+    .setWidth(340)
+    .setBackgroundColor(color(255, 180))
+    .setBackgroundHeight(200)
+    .setLabel("")
+    .moveTo("global");
+
+  // Big title using Textlabel
+  cp5.addTextlabel("metricsTitle")
+    .setText("GAIT METRICS")
+    .setPosition(10, 5)
+    .setColorValue(color(0))
+    .setFont(createFont("Arial Bold", 24))
+    .moveTo(metricsGroup);
+
+  // Cadence display
+  cp5.addTextlabel("cadenceLabel")
+    .setText("Cadence:")
+    .setPosition(10, 50)
+    .setColorValue(color(0))
+    .setFont(createFont("Arial", 16))
+    .moveTo(metricsGroup);
+    
+  cp5.addTextlabel("cadenceValue")
+    .setText(nf(cadence, 1, 0) + " steps/min")
+    .setPosition(120, 50)
+    .setColorValue(color(0, 100, 200))
+    .setFont(createFont("Arial Bold", 16))
+    .moveTo(metricsGroup);
+
+  // Speed display  
+  cp5.addTextlabel("speedLabel")
+    .setText("Speed:")
+    .setPosition(10, 90)
+    .setColorValue(color(0))
+    .setFont(createFont("Arial", 16))
+    .moveTo(metricsGroup);
+    
+  cp5.addTextlabel("speedValue")
+    .setText(nf(speed, 1, 2) + " m/s")
+    .setPosition(120, 90)
+    .setColorValue(color(0, 100, 200))
+    .setFont(createFont("Arial Bold", 16))
+    .moveTo(metricsGroup);
+
+  // Step count display
+  cp5.addTextlabel("stepLabel")
+    .setText("Step Count:")
+    .setPosition(10, 130)
+    .setColorValue(color(0))
+    .setFont(createFont("Arial", 16))
+    .moveTo(metricsGroup);
+    
+  cp5.addTextlabel("stepValue")
+    .setText(str(stepCount))
+    .setPosition(120, 130)
+    .setColorValue(color(0, 100, 200))
+    .setFont(createFont("Arial Bold", 16))
+    .moveTo(metricsGroup);
+  //initially hide
+  metricsGroup.hide();
+}
+
+void updateMetricsDisplay() {
+  // Update dynamic values through ControlP5
+  cp5.get(Textlabel.class, "cadenceValue").setText(nf(cadence, 1, 0) + " steps/min");
+  cp5.get(Textlabel.class, "speedValue").setText(nf(speed, 1, 2) + " m/s");
+  cp5.get(Textlabel.class, "stepValue").setText(str(stepCount));
+  
+}
+
+//
+// SETUP FOR SECTION2 ================================================================================================
+//
+
+void determineGaitPattern() {
+  // Thresholds based on your research (adjust as needed)
+  if (MFP < 30) {
+    currentGaitPattern = "Heel Walking";
+    patternColor = color(200, 100, 0); // Orange
+  } 
+  else if (MFP < 45) {
+    currentGaitPattern = "Out-toeing";
+    patternColor = color(200, 0, 200); // Purple
+  }
+  else if (MFP < 60) {
+    currentGaitPattern = "Normal Gait";
+    patternColor = color(0, 150, 0); // Green
+  }
+  else if (MFP < 75) {
+    currentGaitPattern = "In-toeing";
+    patternColor = color(0, 100, 200); // Blue
+  }
+  else {
+    currentGaitPattern = "Tiptoeing";
+    patternColor = color(200, 0, 0); // Red
+  }
+}
+
+
+void setupForceMeasurementsDisplay() {
+  // Create metrics group with semi-transparent background
+  forceMeasurements = cp5.addGroup("forceMeasurements")
+    .setPosition(400, 500)
+    .setWidth(460)
+    .setHeight(200)
+    .setBackgroundColor(color(240))
+    .setLabel("Gait Analysis Dashboard")
+    .setBarHeight(25)
+    .setColorBackground(color(50, 100, 150))
+    .setColorForeground(color(70, 130, 180));
+// Sensor readings display
+  for (int i = 0; i < 4; i++) {
+    String sensorName = "";
+    switch(i) {
+      case 0: sensorName = "Medial Midfoot"; break;
+      case 1: sensorName = "Medial Forefoot"; break;
+      case 2: sensorName = "Lateral Forefoot"; break;
+      case 3: sensorName = "Heel"; break;
+    }
+    
+    cp5.addTextlabel("sensor"+i+"Label")
+      .setText(sensorName + ":")
+      .setPosition(10, 30 + i*30)
+      .setColorValue(0)
+      .setFont(createFont("Arial", 12))
+      .moveTo(forceMeasurements);
+      
+    cp5.addTextlabel("sensor"+i+"Value")
+      .setText("0.00")
+      .setPosition(150, 30 + i*30)
+      .setColorValue(color(200, 0, 0))
+      .setFont(createFont("Arial Bold", 12))
+      .moveTo(forceMeasurements);
+  }
+  
+  // MFP display
+  cp5.addTextlabel("mfpLabel")
+    .setText("MEDIAL FORCE %:")
+    .setPosition(10, 150)
+    .setColorValue(0)
+    .setFont(createFont("Arial Bold", 14))
+    .moveTo(forceMeasurements);
+    
+  cp5.addTextlabel("mfpValue")
+    .setText("0.00%")
+    .setPosition(150, 150)
+    .setColorValue(color(0, 150, 0))
+    .setFont(createFont("Arial Bold", 16))
+    .moveTo(forceMeasurements);
+    
+  // Gait pattern detection display
+  cp5.addTextlabel("patternLabel")
+    .setText("DETECTED PATTERN:")
+    .setPosition(250, 150)
+    .setColorValue(0)
+    .setFont(createFont("Arial Bold", 14))
+    .moveTo(forceMeasurements);
+    
+  cp5.addTextlabel("patternDisplay")
+    .setText(currentGaitPattern)
+    .setPosition(250, 170)
+    .setColorValue(patternColor)
+    .setFont(createFont("Arial Bold", 16))
+    .moveTo(forceMeasurements);
+  //initially hide
+  forceMeasurements.hide();
+  
 }
 
 
@@ -411,7 +601,5 @@ void controlEvent(ControlEvent theEvent) {
     stepLength = float(theEvent.getStringValue());
   } else if (theEvent.isFrom(strideLengthInput)) {
     strideLength = float(theEvent.getStringValue());
-  } else if (theEvent.isFrom(strideWidthInput)) {
-    strideWidth = float(theEvent.getStringValue());
   }
 }
