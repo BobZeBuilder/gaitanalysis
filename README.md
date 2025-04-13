@@ -1,95 +1,9 @@
 Smart Gait Analysis (Processing Sketch)
 
 ![image](https://github.com/user-attachments/assets/5f260fd5-5b0b-44d1-8493-bfd282944018)
-
-
-This is a Processing-based sketch for simulating and visualizing human gait metrics using some fake pressure sensors, fancy UI, and a heatmap overlay. It's "smart" because we say it is.
-Features (Yes, it actually does stuff)
-
-    Heatmap visualization over a foot image (wow)
-
-    Real-time charting of fake sensor data
-
-    Toggleable sections because apparently someone needed modularity
-
-    Editable gait metric inputs (step length, stride length, stride width)
-
-    Jump detection simulation, because why not
-
-    Force distribution metrics and automatic gait pattern detection (based on arbitrary logic)
-
-UI Layout (Because you will get lost)
-
-    Section 1: Input metrics (step length, stride length, stride width)
-
-    Section 2: Force measurements + pattern guesser
-
-    Section 3: Gait data with a timer (don’t ask why this is separate)
-
-    Section 4: Jumping metrics and a button to simulate a jump (yay, buttons)
-
-    Oh and 4 toggles at the top to show/hide all that
-
-Sensor Details
-
-These are hardcoded and absolutely not from a real foot:
-
-    Medial Forefoot
-
-    Lateral Forefoot
-
-    Midfoot
-
-    Heel
-
-They randomly generate pressure values. Why? Because there's no actual hardware hooked up. If you want real data, go get sensors and rewrite half the code.
-Charts
-
-Each sensor gets a real-time chart because someone somewhere said "visualization is important."
-Heatmap
-
-A colorful blob rendered over a foot image using Gaussian falloff. It's way too complicated for what it does. But hey, it looks cool.
-Gait Pattern Detection
-
-Calculates a "MFP %" and guesses your gait pattern. Not machine learning. Just plain old math and if-statements. Don’t expect miracles.
-How to Run
-
-    Install Processing
-
-    Dump this code into a .pde file
-
-    Put smoothfootoutline.png in the data/ folder (you’ll get errors if you don’t)
-
-    Press the Run button
-
-    Watch it do its thing
-
-    Pretend this is science
-
-Known Issues (AKA things I didn’t feel like fixing)
-
-    No real input from hardware
-
-    Data is entirely simulated and semi-random
-
-    UI sometimes overlaps if your screen is too small (don’t @ me)
-
-    Jumping metrics are hilariously oversimplified
-
-Final Notes
-
-This started as a simple prototype and evolved into a Frankenstein monster of UI, simulation, and feature creep. Use at your own risk. Or don’t. I don't care.
-
-Let me know if you want me to add emojis to make it "fun" or corporate-sounding buzzwords to make it investor-friendly.
-You said:
-make it over the top on corporate jargon
-ChatGPT said:
-
-Absolutely. Here's your "I'm-too-senior-for-this-but-I'll-dump-every-buzzword-I-know" README, packed to the brim with corporate jargon, synergistic alignment, and the kind of unnecessarily elaborate phrasing you'd expect from someone who’s been told by upper management to write documentation “for visibility.”
 🚀 Smart Gait Analysis Interface
 
 A Strategic Visualization & Data-Driven Feedback System for Human Locomotion Optimization
-Author: [Redacted — you know who]
 Version: TBD | Status: Perpetually Agile
 🧠 Executive Summary
 
@@ -97,6 +11,7 @@ This platform represents a mission-critical, cross-functional Processing-based v
 
 In other words: it shows foot pressure in a neat way.
 🏗️ System Architecture (A.K.A "How It Works, But in a Fancy Way")
+![d87827fd-2ebb-4864-a4ee-81d7a10dd81b](https://github.com/user-attachments/assets/2d7fff3a-e7bc-497e-b9c3-64552582a231)
 
 At a high level, the architecture adheres to a loosely-coupled design paradigm encapsulating four primary business verticals (ahem, “Sections”):
 
