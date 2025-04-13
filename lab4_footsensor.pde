@@ -8,13 +8,13 @@ Group forceMeasurements; //global section2
 
 // SECTION BUTTONS
 boolean showSection1 = true;
-boolean showSection2 = false;
-boolean showSection3 = false;
-boolean showSection4 = false;
+boolean showSection2 = true;
+boolean showSection3 = true;
+boolean showSection4 = true;
 boolean prevSection1 = false;
-boolean prevSection2 = true;
-boolean prevSection3 = true;
-boolean prevSection4 = true;
+boolean prevSection2 = false;
+boolean prevSection3 = false;
+boolean prevSection4 = false;
 
 // Gait metrics SECTION 1
 float stepLength = 0.72;
@@ -39,6 +39,13 @@ float cumulativeLF = 0;
 float cumulativeHEEL = 0;
 float MFP = 0;
 int time = 0;
+
+//Metrics variables SECTION 3
+boolean isActive = false;   // Control the timer
+int startTime = 0;          // Time when timer started or resumed
+int elapsedTime = 0;        // Accumulated time when paused
+int displayTime = 0;
+
 
 String[] profileNames = {"Normal Gait", "In-toeing", "Out-toeing", "Tiptoeing", "Walking on Heel"};
 
@@ -304,38 +311,38 @@ void updateCharts() {
 void setupSections() {
   // Create 4 toggle buttons
   cp5.addToggle("section1")
-     .setPosition(400, 150)
-     .setSize(100, 50)
-     .setFont(createFont("Arial", 16))
+     .setPosition(400, 100)
+     .setSize(100, 25)
+     .setFont(createFont("Arial", 14))
      .setValue(true)
-     .setCaptionLabel("Section 1")
+     .setCaptionLabel("Toggle Gait")
      .setColorCaptionLabel(0)
      .setMode(ControlP5.SWITCH);
      
   cp5.addToggle("section2")
-     .setPosition(600, 150)
-     .setSize(100, 50)
+     .setPosition(590, 100)
+     .setSize(100, 25)
      .setValue(true)
-     .setFont(createFont("Arial", 16))
-     .setCaptionLabel("Section 2")
+     .setFont(createFont("Arial", 14))
+     .setCaptionLabel("Toggle Force")
      .setColorCaptionLabel(0)
      .setMode(ControlP5.SWITCH);
      
   cp5.addToggle("section3")
-     .setPosition(800, 150)
-     .setSize(100, 50)
+     .setPosition(780, 100)
+     .setSize(100, 25)
      .setValue(true)
-     .setFont(createFont("Arial", 16))
-     .setCaptionLabel("Section 3")
+     .setFont(createFont("Arial", 14))
+     .setCaptionLabel("Toggle Activity")
      .setColorCaptionLabel(0)
      .setMode(ControlP5.SWITCH);
      
   cp5.addToggle("section4")
-     .setPosition(1000, 150)
-     .setSize(100, 50)
+     .setPosition(970, 100)
+     .setSize(100, 25)
      .setValue(true)
-     .setFont(createFont("Arial", 16))
-     .setCaptionLabel("Section 4")
+     .setFont(createFont("Arial", 14))
+     .setCaptionLabel("Toggle Jump")
      .setColorCaptionLabel(0)
      .setMode(ControlP5.SWITCH);
 }
@@ -366,7 +373,7 @@ void setupCharts() {
   
   for (int i = 0; i < sensors.length; i++) {
     sensors[i].chart = cp5.addChart(sensors[i].name + " Chart")
-      .setPosition(startX + i*(chartWidth + 40), 300)
+      .setPosition(startX + i*(chartWidth + 40), 150)
       .setSize(chartWidth, chartHeight)
       .setRange(0, 1)
       .setView(Chart.LINE)
@@ -384,9 +391,9 @@ void setupCharts() {
 void setupInputFields() {
   // Step Length Input
   stepLengthInput = cp5.addTextfield("stepLengthInput")
-    .setPosition(800, 500)
+    .setPosition(400, 340)
     .setSize(150, 30)
-    .setFont(createFont("Arial", 14))
+    .setFont(createFont("Arial", 10))
     .setAutoClear(false)
     .setCaptionLabel("Step Length (m)")
     .setColorCaptionLabel(0)
@@ -394,9 +401,9 @@ void setupInputFields() {
     
   // Stride Length Input  
   strideLengthInput = cp5.addTextfield("strideLengthInput")
-    .setPosition(800, 550)
+    .setPosition(400, 385)
     .setSize(150, 30)
-    .setFont(createFont("Arial", 14))
+    .setFont(createFont("Arial", 10))
     .setAutoClear(false)
     .setCaptionLabel("Stride Length (m)")
     .setColorCaptionLabel(0)
@@ -404,9 +411,9 @@ void setupInputFields() {
   
   // Stride Width Input  
   strideWidthInput = cp5.addTextfield("strideWidthInput")
-    .setPosition(800, 600)
+    .setPosition(400, 430)
     .setSize(150, 30)
-    .setFont(createFont("Arial", 14))
+    .setFont(createFont("Arial", 10))
     .setAutoClear(false)
     .setCaptionLabel("Stride Width (m)")
     .setColorCaptionLabel(0)
@@ -421,10 +428,18 @@ void initializeHistory() {
   }
 }
 
+String isActive(boolean active) {
+  if(active){
+    return "In Motion";
+  } else {
+    return "Standing Still";
+  }
+}
+
 void setupMetricsDisplay() {
   // Create metrics group with semi-transparent background
   metricsGroup = cp5.addGroup("metricsGroup")
-    .setPosition(400, 500)
+    .setPosition(400, 525)
     .setWidth(340)
     .setBackgroundColor(color(255, 180))
     .setBackgroundHeight(200)
@@ -442,46 +457,74 @@ void setupMetricsDisplay() {
   // Cadence display
   cp5.addTextlabel("cadenceLabel")
     .setText("Cadence:")
-    .setPosition(10, 50)
+    .setPosition(10, 30)
     .setColorValue(color(0))
-    .setFont(createFont("Arial", 16))
+    .setFont(createFont("Arial", 14))
     .moveTo(metricsGroup);
     
   cp5.addTextlabel("cadenceValue")
     .setText(nf(cadence, 1, 0) + " steps/min")
-    .setPosition(120, 50)
+    .setPosition(120, 30)
     .setColorValue(color(0, 100, 200))
-    .setFont(createFont("Arial Bold", 16))
+    .setFont(createFont("Arial Bold", 14))
     .moveTo(metricsGroup);
 
   // Speed display  
   cp5.addTextlabel("speedLabel")
     .setText("Speed:")
-    .setPosition(10, 90)
+    .setPosition(10, 60)
     .setColorValue(color(0))
-    .setFont(createFont("Arial", 16))
+    .setFont(createFont("Arial", 14))
     .moveTo(metricsGroup);
     
   cp5.addTextlabel("speedValue")
     .setText(nf(speed, 1, 2) + " m/s")
-    .setPosition(120, 90)
+    .setPosition(120, 60)
     .setColorValue(color(0, 100, 200))
-    .setFont(createFont("Arial Bold", 16))
+    .setFont(createFont("Arial Bold", 14))
     .moveTo(metricsGroup);
 
   // Step count display
   cp5.addTextlabel("stepLabel")
     .setText("Step Count:")
-    .setPosition(10, 130)
+    .setPosition(10, 90)
     .setColorValue(color(0))
-    .setFont(createFont("Arial", 16))
+    .setFont(createFont("Arial", 14))
     .moveTo(metricsGroup);
     
   cp5.addTextlabel("stepValue")
     .setText(str(stepCount))
-    .setPosition(120, 130)
+    .setPosition(120, 90)
     .setColorValue(color(0, 100, 200))
-    .setFont(createFont("Arial Bold", 16))
+    .setFont(createFont("Arial Bold", 14))
+    .moveTo(metricsGroup);
+  //
+  // Time Active display for SECTION 3
+  //
+  cp5.addTextlabel("activeLabel")
+    .setText("Status:")
+    .setPosition(10, 120)
+    .setColorValue(color(0))
+    .setFont(createFont("Arial", 14))
+    .moveTo(metricsGroup);
+    
+  cp5.addTextlabel("activeValue")
+    .setText(isActive(isActive))
+    .setPosition(120, 120)
+    .setColorValue(color(0, 100, 200))
+    .setFont(createFont("Arial Bold", 14))
+    .moveTo(metricsGroup);
+  cp5.addTextlabel("timeLabel")
+    .setText("Time Active:")
+    .setPosition(10, 150)
+    .setColorValue(color(0))
+    .setFont(createFont("Arial", 14))
+    .moveTo(metricsGroup);
+  cp5.addTextlabel("timeValue")
+    .setText(nf(displayTime / 1000, 2) + "s")
+    .setPosition(120, 150)
+    .setColorValue(color(0, 100, 200))
+    .setFont(createFont("Arial Bold", 14))
     .moveTo(metricsGroup);
   //initially hide
   metricsGroup.hide();
@@ -527,14 +570,12 @@ void determineGaitPattern() {
 void setupForceMeasurementsDisplay() {
   // Create metrics group with semi-transparent background
   forceMeasurements = cp5.addGroup("forceMeasurements")
-    .setPosition(400, 500)
-    .setWidth(460)
-    .setHeight(200)
-    .setBackgroundColor(color(240))
-    .setLabel("Gait Analysis Dashboard")
-    .setBarHeight(25)
-    .setColorBackground(color(50, 100, 150))
-    .setColorForeground(color(70, 130, 180));
+    .setPosition(765, 525)
+    .setWidth(400)
+    .setBackgroundColor(color(255, 180))
+    .setBackgroundHeight(200)
+    .setLabel("")
+    .moveTo("global");
 // Sensor readings display
   for (int i = 0; i < 4; i++) {
     String sensorName = "";
@@ -559,7 +600,12 @@ void setupForceMeasurementsDisplay() {
       .setFont(createFont("Arial Bold", 12))
       .moveTo(forceMeasurements);
   }
-  
+  cp5.addTextlabel("forcemetricsTitle")
+    .setText("FORCE METRICS")
+    .setPosition(10, 5)
+    .setColorValue(color(0))
+    .setFont(createFont("Arial Bold", 24))
+    .moveTo(forceMeasurements);
   // MFP display
   cp5.addTextlabel("mfpLabel")
     .setText("MEDIAL FORCE %:")
