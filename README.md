@@ -1,6 +1,7 @@
 Smart Gait Analysis (Processing Sketch)
 
-Look, I didn't want to write this. You asked for a README, so here's your README.
+![image](https://github.com/user-attachments/assets/5f260fd5-5b0b-44d1-8493-bfd282944018)
+
 
 This is a Processing-based sketch for simulating and visualizing human gait metrics using some fake pressure sensors, fancy UI, and a heatmap overlay. It's "smart" because we say it is.
 Features (Yes, it actually does stuff)
