@@ -33,6 +33,18 @@ class Sensor {
   }
 }
 
+class Accelerometer {
+  float coordinate;    // coordinate
+  float acc;           // acceleration
+  char dir;            // direction : x, y, or z
+  
+  Accelerometer(float position, float acceleration, char orientation) {
+    coordinate = position;
+    acc = acceleration;
+    dir = orientation;
+  }
+}
+
 Sensor[] sensors;
 
 enum gait {
@@ -387,7 +399,7 @@ float calculatateMFPFromSensorInputs() {
 // Profiling the gait
 gait porfileGait(final int MFP) {
   // TO BE IMPLEMENTED:
-  // 'Experiment' driven estimation of the ranges for the each gait equivalent
+  // 'Experiment' driven estimation of the ranges for each gait equivalent
   
   return gait.NOT_DEFINED; // to use further we should call on this object .ordinal()
 }
