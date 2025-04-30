@@ -11,7 +11,6 @@ This platform represents a mission-critical, cross-functional Processing-based v
 
 In other words: it shows foot pressure in a neat way.
 ## 🏗️ System Architecture (A.K.A "How It Works, But in a Fancy Way")
-![d87827fd-2ebb-4864-a4ee-81d7a10dd81b](https://github.com/user-attachments/assets/2d7fff3a-e7bc-497e-b9c3-64552582a231)
 
 At a high level, the architecture adheres to a loosely-coupled design paradigm encapsulating four primary business verticals (ahem, “Sections”):
 
